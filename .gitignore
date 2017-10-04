@@ -1,0 +1,6 @@
+node_modules
+*.swp
+.idea
+doc
+www/GooglePlaces.dist.js
+.DS_Store

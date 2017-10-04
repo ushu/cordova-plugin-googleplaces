@@ -1,0 +1,29 @@
+{
+  "name": "cordova-plugin-googleplaces",
+  "version": "0.0.1",
+  "description": "A Cordova plugin to access the native Google Places SDK",
+  "main": "index.js",
+  "repository": "https://github.com/ushu/cordova-plugin-googleplaces",
+  "author": "Aurélien Noce <aurnoce@gmail.com> (https://github.com/ushu)",
+  "license": "MIT",
+  "scripts": {
+    "dist": "NODE_ENV=production rollup -c",
+    "format": "prettier www/GooglePlaces.js --write --trailing-comma=all",
+    "doc": "esdoc"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-preset-env": "^1.6.0",
+    "esdoc": "^1.0.3",
+    "esdoc-ecmascript-proposal-plugin": "^1.0.0",
+    "esdoc-standard-plugin": "^1.0.0",
+    "prettier": "^1.7.4",
+    "rollup": "^0.50.0",
+    "rollup-plugin-babel": "^3.0.2",
+    "rollup-plugin-commonjs": "^8.2.1",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-replace": "^2.0.0",
+    "rollup-plugin-uglify": "^2.0.1"
+  }
+}

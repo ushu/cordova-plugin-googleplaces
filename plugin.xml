@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="cordova-plugin-googleplaces"
+        version="0.0.1">
+
+    <!-- General Info -->
+    <name>Google Places</name>
+    <description>Google places is a service by Google to lookup and contribute information about places.</description>
+    <license>MIT</license>
+    <keywords>ios,android,google,places,google places</keywords>
+
+    <!-- JS module -->
+    <js-module src="www/GooglePlaces.dist.js" name="GooglePlaces">
+        <clobbers target="cordova.plugins.GooglePlaces" />
+    </js-module>
+
+    <!-- iOS support -->
+    <platform name="ios">
+
+        <!-- Plugin code -->
+        <config-file target="config.xml" parent="/*">
+            <feature name="GooglePlaces">
+                <param name="ios-package" value="CDVGooglePlaces"/>
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+        <header-file src="src/ios/CDVGooglePlaces.h"/>
+        <source-file src="src/ios/CDVGooglePlaces.m"/>
+
+        <!-- Install GooglePlaces as a pod -->
+        <framework src="GooglePlaces" type="podspec" spec="2.3.1" />
+
+    </platform>
+
+</plugin>
