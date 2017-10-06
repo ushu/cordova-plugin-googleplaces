@@ -201,7 +201,7 @@
 // MARK: Generic error handling
 
 -(void)failCommandMissingAPIKey:(NSString*)callbackId {
-    static const NSString* errorNoApiKey = @"GooglePlaces: please provide API_KEY_FOR_ANDROID before using the plugin.";
+    static const NSString* errorNoApiKey = @"GooglePlaces: please provide API_KEY_FOR_IOS before using the plugin.";
     [self failCommandWithCallbackId:callbackId message:errorNoApiKey];
 }
 
