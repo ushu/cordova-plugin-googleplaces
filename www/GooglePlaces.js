@@ -1,128 +1,250 @@
-/**
- * A GPS coordinate.
- */
-export class Coordinate {
-  /**
-   * @param {!number} latitude - the latitude value.
-   * @param {!number} longitude - the longitude value
-   */
-  constructor(latitude, longitude) {
-    /**
-     * the latitude value
-     * @type {number}
-     */
-    this.latitude = latitude;
-    /**
-     * the longitude value
-     * @type {number}
-     */
-    this.longitude = longitude;
-  }
-}
+import isFunction from "lodash/isFunction";
 
-/**
- * A (rectangular) region delimited by two coordinates.
- *
- * @see https://developers.google.com/maps/documentation/ios-sdk/reference/interface_g_m_s_coordinate_bounds
- */
-export class CoordinateBounds {
-  /**
-   * @param {!Coordinate} coord1 - the coordinate of the first corner of the region.
-   * @param {!Coordinate} coord2 - the coordinate of the second corner of the region.
-   */
-  constructor(coord1, coord2) {
-    /**
-     * the coordinate of the first corner of the region.
-     * @type {Coordinate}
-     */
-    this.coord1 = coord1;
-    /**
-     * the coordinate of the second corner of the region.
-     * @type {Coordinate}
-     */
-    this.coord2 = coord2;
-  }
-}
-
-/**
- * Wraps all the (non-UI) methods of the Google Places SDK to Javascript.
- */
-export default class GooglePlaces {
-  /**
-   * Discover the place where the device is currently located.
-   *
-   * @param {function(results: Object[])} success - the success callback. It is passed an array of "place likehood" objects, each consisting of a "place" result and a ligkehood value between 0 and 1 (1 meaning 100% accurate).
-   * @param {?function(error: string)} failure - the failure callback, which receives an error message from the SDK.
-   */
+//
+// # GooglePlaces
+//
+// Wraps the (non-UI) methods of the Google Places SDK to Javascript.
+//
+class GooglePlaces {
+  // ## currentPlace
+  //
+  // `currentPlace`(`sucess`, `failure`)
+  //
+  // Discover the place where the device is currently located.
+  //
+  // ### Important notice
+  //
+  // This method *requires* that the user has enabled geolocation in the app.
+  // To to so, use the [dedicated cordova plugin](https://github.com/apache/cordova-plugin-geolocation) before calling this method.
+  //
+  // ### Parameters
+  //
+  // - `success` is called in case of success, it will contain "place likehood" objects
+  //   with a `place` and `likehood` fields:
+  //   ```javascript
+  //   {
+  //    place: {
+  //      name: "some place name",
+  //      placeID: "XXXXX"
+  //    },
+  //    likehood: 0.87 // <= means 87% accurate
+  //   }
+  //   ```
+  // - `failure` is called in case of an error, with an error objects
+  //
   currentPlace(success, failure) {
-    cordova.exec(success, failure, "CDVGooglePlaces", "currentPlace", []);
+    cordova.exec(
+      success,
+      err => failure(new Error(err)),
+      "GooglePlaces",
+      "currentPlace",
+      [],
+    );
   }
 
-  /**
-   * Filers for the autocompleteQuery method.
-   *
-   * @type {Object}
-   * @property {string} AutocompleteFilters.NoFilter An empty filter; all results are returned.
-   * @property {string} AutocompleteFilters.Geocode Returns only geocoding results, rather than businesses. Use this request to disambiguate results where the specified location may be indeterminate.
-   * @property {string} AutocompleteFilters.Address Returns only autocomplete results with a precise address. Use this type when you know the user is looking for a fully specified address.
-   * @property {string} AutocompleteFilters.Establishment Returns only places that are businesses.
-   * @property {string} AutocompleteFilters.Region Returns only places that match one of the following types: `locality`, `sublocality`, `postal_code`, `country`, `administrative_area_level_1`, `administrative_area_level_2`
-   * @property {string} AutocompleteFilters.City Returns only results matching `locality` or `administrative_area_level_3`.
-   */
-  static AutocompleteFilters = {
-    NoFilter: "no_filter",
-    Geocode: "geocode",
-    Address: "address",
-    Establishment: "establishment",
-    Region: "region",
-    City: "city",
-  };
+  // ## autocompleteQuery
+  //
+  // `autocompleteQuery`(`query`, `[bounds]`, `[filter]`, `success`, `[failure]`)
+  //
+  // Runs a query to offer auto-completion results from a query.
+  //
+  // #### Note
+  //
+  // this method takes a *variable* number of arguments.
+  //
+  // ### Parameters
+  //
+  // - `query`: the actual query: an incomplete address.
+  // - `bounds`: a region to limit the search to.
+  //
+  //    It should be defined as a "coordinate region" object such as:
+  //
+  //    ```javascript
+  //    {
+  //     northEast: {
+  //       latitude: 1.234,
+  //       longitude: 5,667
+  //     },
+  //     southWest: {
+  //       latitude: 1.234,
+  //       longitude: 5,667
+  //     }
+  //    }
+  //    ```
+  //
+  // - `filter`: a filter to limit the results to a specific region.
+  //
+  //   Such a filter is given by a filter type taken from the `GooglePlaces.AutocompleteFilterTypes` and an (optional) country:
+  //
+  //   ```javascript
+  //   {
+  //     filter: AutocompleteFilterTypes.NoFilter,
+  //     country: "FR" // <= this is optional
+  //   }
+  //   ```
+  //
+  // - `success` is called in case of success, it will contain "autocomplete prediction" objects
+  //   with info fields:
+  //   ```javascript
+  //   {
+  //     fullText: "description of the place",
+  //     primaryText: "partial description of the place",
+  //     secondaryText: "partial description of the place",
+  //     placeID: "XXXXX",
+  //     types: [ "a", "list", "of", "types", "for", "the", "result" ]
+  //   }
+  //   ```
+  // - `failure` is called in case of an error, with an error object.
+  autocompleteQuery(...args) {
+    let params = [];
+    let callbacks = [];
 
-  /**
-   * Runs a query to offer auto-completion results from a query.
-   *
-   * @param {!string} query - the query, a partial address to auto-complete.
-   * @param {?CoordinateBounds} bounds - a region to limit the search to.
-   * @param {!string} filter - one of the filters available in GooglePlaces.AutocompleteFilters.
-   * @param {?function} success - the success callback. It is passed an array of "autocomplete results" objects.
-   * @param {?function} failure - the failure callback, which receives an error message from the SDK.
-   */
-  autocompleteQuery(query, bounds, filter, success, failure) {
-    cordova.exec(success, failure, "CDVGooglePlaces", "autocompleteQeury", [
-      query,
-      bounds,
-      filter,
-    ]);
+    for (let arg of args) {
+      if (isFunction(arg)) {
+        callbacks.push(arg);
+      } else {
+        params.push(arg);
+      }
+    }
+
+    let success = () => {};
+    let failure = () => {};
+    if (callbacks.length > 0) {
+      success = callbacks[0];
+      if (callbacks.length > 0) {
+        failure = err => callbacks[1](new Error(err));
+      }
+    }
+
+    if (params.length > 3 || callbacks.length > 2) {
+      const err = new Error(
+        "GooglePlaces: wrong arguments for autocompleteQuery(query, bounds, filter, success, failure)",
+      );
+      failure(err);
+      return;
+    }
+
+    cordova.exec(success, failure, "GooglePlaces", "autocompleteQuery", params);
   }
 
-  /**
-   * Request place photos to display in your application.
-   *
-   * Note: this method returns **metadata** about the place photos, to load the actual
-   * photos please call the `loadPlacePhoto` method with the metadata object.
-   *
-   * @param {!string} placeID - the ID of the place, obtained from Google Places.
-   * @param {?function(results: Object[])} success - the success callback. It is passed an array of "place metadata" objects.
-   * @param {?function(error: string)} failure - the failure callback, which receives an error message from the SDK.
-   */
-  lookUpPhotos(placeID, success, failure) {
-    cordova.exec(success, failure, "CDVGooglePlaces", "lookupPhotos", [
-      placeID,
-    ]);
+  // ## showPlaceAutocomplete
+  //
+  // `showPlaceAutocomplete`(`sucess`, `failure`)
+  //
+  // Show the native UI for Picking a nearby place
+  //
+  // ### Important notice
+  //
+  // This method *requires* that the user has enabled geolocation in the app.
+  // To to so, use the [dedicated cordova plugin](https://github.com/apache/cordova-plugin-geolocation) before calling this method.
+  //
+  // ### Parameters
+  //
+  // - `bounds`: (optinal) a region to limit the search to.
+  //
+  //    It should be defined as a "coordinate region" object such as:
+  //
+  //    ```javascript
+  //    {
+  //     northEast: {
+  //       latitude: 1.234,
+  //       longitude: 5,667
+  //     },
+  //     southWest: {
+  //       latitude: 1.234,
+  //       longitude: 5,667
+  //     }
+  //    }
+  //    ```
+  //
+  // - `success` is called in case of success, it will contain "place" objects
+  //   with a `place` and `likehood` fields:
+  //   ```javascript
+  //   {
+  //      name: "some place name",
+  //      placeID: "XXXXX",
+  //      // and lots of other fields, depending on the place info available
+  //   }
+  //   ```
+  // - `failure` is called in case of an error, with an error objects
+  //
+  pickPlace(...args) {
+    let params = [];
+    let callbacks = [];
+
+    for (let arg of args) {
+      if (isFunction(arg)) {
+        callbacks.push(arg);
+      } else {
+        params.push(arg);
+      }
+    }
+
+    let success = () => {};
+    let failure = () => {};
+    if (callbacks.length > 0) {
+      success = callbacks[0];
+      if (callbacks.length > 0) {
+        failure = err => callbacks[1](new Error(err));
+      }
+    }
+
+    if (params.length > 1 || callbacks.length > 2) {
+      const err = new Error(
+        "GooglePlaces: wrong arguments for pickPlace(bounds, success, failure)",
+      );
+      failure(err);
+      return;
+    }
+
+    cordova.exec(success, failure, "GooglePlaces", "pickPlace", []);
   }
 
-  /**
-   * Load the actual photo from photo metadata.
-   *
-   * Note: the photo obtained from the API will passed as a Data URI.
-   *
-   * @param {!string} photoMetadata - the metadata of the photo to retreive.
-   * @param {?function(results: string)} success - the success callback. It is passed a string containing the photo contents as a data URI.
-   * @param {?function(error: string)} failure - the failure callback, which receives an error message from the SDK.
-   */
-  loadPlacePhoto(photoMetadata, success, failure) {
-    cordova.exec(success, failure, "CDVGooglePlaces", "loadPlacePhoto", [
-      photoMetadata,
-    ]);
+  // ## showPlaceAutocomplete
+  //
+  // `showPlaceAutocomplete`(`sucess`, `failure`)
+  //
+  // Show the native UI for Place Autocomplete
+  //
+  // ### Parameters
+  //
+  // - `success` is called in case of success, it will contain "place" objects
+  //   with a `place` and `likehood` fields:
+  //   ```javascript
+  //   {
+  //      name: "some place name",
+  //      placeID: "XXXXX",
+  //      // and lots of other fields, depending on the place info available
+  //   }
+  //   ```
+  // - `failure` is called in case of an error, with an error objects
+  //
+  showPlaceAutocomplete(success, failure) {
+    cordova.exec(
+      success,
+      err => failure(new Error(err)),
+      "GooglePlaces",
+      "showPlaceAutocomplete",
+      [],
+    );
   }
 }
+
+// ## Filters for the `autocompleteQuery` method.
+const AutocompleteFilterTypes = {
+  // - `AutocompleteFilterTypes.NoFilter` is an empty filter; all results are returned.
+  NoFilter: "no_filter",
+  // - `AutocompleteFilterTypes.Geocode` returns only autocomplete results with a precise address. Use this type when you know the user is looking for a fully specified address.
+  Geocode: "geocode",
+  // - `AutocompleteFilterTypes.Address` returns only places that are businesses.
+  Address: "address",
+  // - `AutocompleteFilterTypes.Establishment` returns only places that are businesses.
+  Establishment: "establishment",
+  // - `AutocompleteFilterTypes.Region` returns only places that match one of the following types: `locality`, `sublocality`, `postal_code`, `country`, `administrative_area_level_1`, `administrative_area_level_2`
+  Region: "region",
+  // - `AutocompleteFilterTypes.City` returns only results matching `locality` or `administrative_area_level_3`.
+  City: "city",
+};
+
+module.exports = new GooglePlaces();
+module.exports.AutocompleteFilterTypes = AutocompleteFilterTypes;

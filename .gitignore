@@ -1,6 +1,7 @@
 node_modules
 *.swp
 .idea
-doc
+docs
+!docs/GooglePlaces.html
 www/GooglePlaces.dist.js
 .DS_Store

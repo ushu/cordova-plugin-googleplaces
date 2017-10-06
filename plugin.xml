@@ -17,6 +17,11 @@
 
     <!-- iOS support -->
     <platform name="ios">
+        <!-- Add API_KEY_FOR_IOS preference, copied to Info.plist -->
+        <preference name="API_KEY_FOR_IOS" />
+        <config-file target="*-Info.plist" parent="Google Places API Key">
+          <string>$API_KEY_FOR_IOS</string>
+        </config-file>
 
         <!-- Plugin code -->
         <config-file target="config.xml" parent="/*">
@@ -29,8 +34,8 @@
         <source-file src="src/ios/CDVGooglePlaces.m"/>
 
         <!-- Install GooglePlaces as a pod -->
-        <framework src="GooglePlaces" type="podspec" spec="2.3.1" />
-
+        <framework src="GooglePlaces" type="podspec" spec="2.3.0" />
+        <framework src="GooglePlacePicker" type="podspec" spec="2.3.0" />
     </platform>
 
 </plugin>
