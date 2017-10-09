@@ -10,8 +10,8 @@
 
 @implementation CDVGooglePlaces {
     NSString* _APIKey;
-    NSString* _placePickerCallbackId;
-    NSString* _placeAutocompleteCallbackId;
+    CDVInvokedUrlCommand* _placePickerCommand;
+    CDVInvokedUrlCommand* _placeAutocompleteCommand;
 }
 
 -(void)pluginInitialize {
@@ -173,7 +173,7 @@
     }
     
     // verify we are not *already* presenting
-    if (_placePickerCallbackId) {
+    if (_placePickerCommand) {
         [self failCommandWithCallbackId:command.callbackId message:@"The Place Picker is already presented onscreen !"];
         return;
     }
@@ -182,19 +182,19 @@
     GMSPlacePickerConfig* config = [[GMSPlacePickerConfig alloc] initWithViewport:bounds];
     GMSPlacePickerViewController *vc = [[GMSPlacePickerViewController alloc] initWithConfig:config];
     vc.delegate = self;
-    _placePickerCallbackId = command.callbackId;
+    _placePickerCommand = command;
     [self.viewController presentViewController:vc animated:true completion:nil];
 }
 
 -(void)showPlaceAutocomplete:(CDVInvokedUrlCommand*)command {
-    if (_placeAutocompleteCallbackId) {
+    if (_placeAutocompleteCommand) {
         [self failCommandWithCallbackId:command.callbackId message:@"The Autocomplete view is still presented onscreen !"];
         return;
     }
     
     GMSAutocompleteViewController* vc = [[GMSAutocompleteViewController alloc] init];
     vc.delegate = self;
-    _placeAutocompleteCallbackId = command.callbackId;
+    _placeAutocompleteCommand = command;
     [self.viewController presentViewController:vc animated:true completion:nil];
 }
 
@@ -496,30 +496,30 @@ NSDictionary* encodeAddressComponent(GMSAddressComponent* component) {
 @implementation CDVGooglePlaces(PlacePicker)
 
 -(void)placePicker:(GMSPlacePickerViewController *)viewController didPickPlace:(GMSPlace *)place {
-    if (_placePickerCallbackId) {
+    if (_placePickerCommand) {
         NSDictionary* encodedPlace = encodePlace(place);
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:encodedPlace];
-        [self.commandDelegate sendPluginResult:result callbackId:_placePickerCallbackId];
+        [self.commandDelegate sendPluginResult:result callbackId:_placeAutocompleteCommand.callbackId];
     }
-    _placePickerCallbackId = nil;
+    _placePickerCommand = nil;
     [self.viewController dismissViewControllerAnimated:true completion:nil];
 }
 
 -(void)placePicker:(GMSPlacePickerViewController *)viewController didFailWithError:(NSError *)error {
-    if (_placePickerCallbackId) {
-        [self failCommandWithCallbackId:_placePickerCallbackId message:error.localizedDescription];
+    if (_placePickerCommand) {
+        [self failCommandWithCallbackId:_placeAutocompleteCommand.callbackId message:error.localizedDescription];
     }
-    _placePickerCallbackId = nil;
+    _placePickerCommand = nil;
     [self.viewController dismissViewControllerAnimated:true completion:nil];
 }
 
 -(void)placePickerDidCancel:(GMSPlacePickerViewController *)viewController {
-    if (_placePickerCallbackId) {
+    if (_placePickerCommand) {
         // empty "valid" result
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self.commandDelegate sendPluginResult:result callbackId:_placePickerCallbackId];
+        [self.commandDelegate sendPluginResult:result callbackId:_placeAutocompleteCommand.callbackId];
     }
-    _placePickerCallbackId = nil;
+    _placePickerCommand = nil;
     [self.viewController dismissViewControllerAnimated:true completion:nil];
 }
 
@@ -528,30 +528,30 @@ NSDictionary* encodeAddressComponent(GMSAddressComponent* component) {
 @implementation CDVGooglePlaces(Autocomplete)
 
 -(void)viewController:(GMSAutocompleteViewController *)viewController didAutocompleteWithPlace:(GMSPlace *)place {
-    if (_placeAutocompleteCallbackId) {
+    if (_placeAutocompleteCommand) {
         NSDictionary* encodedPlace = encodePlace(place);
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:encodedPlace];
-        [self.commandDelegate sendPluginResult:result callbackId:_placePickerCallbackId];
+        [self.commandDelegate sendPluginResult:result callbackId:_placeAutocompleteCommand.callbackId];
     }
-    _placeAutocompleteCallbackId = nil;
+    _placeAutocompleteCommand = nil;
     [self.viewController dismissViewControllerAnimated:true completion:nil];    
 }
 
 -(void)viewController:(GMSAutocompleteViewController *)viewController didFailAutocompleteWithError:(NSError *)error {
-    if (_placeAutocompleteCallbackId) {
-        [self failCommandWithCallbackId:_placeAutocompleteCallbackId message:error.localizedDescription];
+    if (_placeAutocompleteCommand) {
+        [self failCommandWithCallbackId:_placeAutocompleteCommand.callbackId message:error.localizedDescription];
     }
-    _placeAutocompleteCallbackId = nil;
+    _placeAutocompleteCommand = nil;
     [self.viewController dismissViewControllerAnimated:true completion:nil];
 }
 
 - (void)wasCancelled:(nonnull GMSAutocompleteViewController *)viewController {
-    if (_placeAutocompleteCallbackId) {
+    if (_placeAutocompleteCommand) {
         // empty result
         CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self.commandDelegate sendPluginResult:result callbackId:_placePickerCallbackId];
+        [self.commandDelegate sendPluginResult:result callbackId:_placeAutocompleteCommand.callbackId];
     }
-    _placeAutocompleteCallbackId = nil;
+    _placeAutocompleteCommand = nil;
     [self.viewController dismissViewControllerAnimated:true completion:nil];
 
 }
