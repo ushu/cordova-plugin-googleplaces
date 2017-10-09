@@ -281,16 +281,16 @@ GMSPlacesAutocompleteTypeFilter decodeAutocompleteTypeFilter(NSString* s, NSErro
 GMSCoordinateBounds* decodeCoordinateBounds(NSDictionary<NSString*,id>* dict, NSError** error) {
     NSError *decodeError;
     
-    id rawNorthEast = [dict objectForKey:@"northEast"];
+    id rawNorthEast = [dict objectForKey:@"north_east"];
     if (!rawNorthEast) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"northEast\" coordinate for coordinate bounds" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"north_east\" coordinate for coordinate bounds" }];
         }
         return nil;
     }
     if (![rawNorthEast isKindOfClass:[NSDictionary class]]) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"northEast\" coordinate should be an Object" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"north_east\" coordinate should be an Object" }];
         }
         return nil;
     }
@@ -302,16 +302,16 @@ GMSCoordinateBounds* decodeCoordinateBounds(NSDictionary<NSString*,id>* dict, NS
         return nil;
     }
     
-    id rawSouthWest = [dict objectForKey:@"southWest"];
+    id rawSouthWest = [dict objectForKey:@"south_west"];
     if (!rawSouthWest) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"southWest\" coordinate for coordinate bounds" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"south_west\" coordinate for coordinate bounds" }];
         }
         return nil;
     }
     if (![rawSouthWest isKindOfClass:[NSDictionary class]]) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"southWest\" coordinate should be an Object" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"south_west\" coordinate should be an Object" }];
         }
         return nil;
     }
@@ -364,10 +364,10 @@ CLLocationCoordinate2D decodeCoordinate(NSDictionary<NSString*,id>* dict, NSErro
 
 NSDictionary* encodeAutocompletePrediction(GMSAutocompletePrediction* prediction) {
     return @{
-             @"fullText": [prediction.attributedFullText string],
-             @"primaryText": [prediction.attributedPrimaryText string],
-             @"secondaryText": [prediction.attributedSecondaryText string],
-             @"placeID": prediction.placeID,
+             @"full_text": [prediction.attributedFullText string],
+             @"primary_text": [prediction.attributedPrimaryText string],
+             @"secondary_text": [prediction.attributedSecondaryText string],
+             @"place_id": prediction.placeID,
              @"types": prediction.types,
              };
 }
@@ -397,46 +397,46 @@ NSDictionary* encodePlace(GMSPlace* place) {
     NSMutableDictionary* encodedPlace = [[NSMutableDictionary alloc]
                                          initWithDictionary:@{
                                                               @"name": place.name,
-                                                              @"placeID": place.placeID
+                                                              @"place_id": place.placeID
                                                               }];
     
     if (CLLocationCoordinate2DIsValid(place.coordinate)) {
         encodedPlace[@"coordinate"] = encodeCoordinate(place.coordinate);
     }
     if (place.phoneNumber) {
-        encodedPlace[@"phoneNumber"] = place.phoneNumber;
+        encodedPlace[@"phone_number"] = place.phoneNumber;
     }
     if (place.formattedAddress) {
-        encodedPlace[@"formattedAddress"] = place.formattedAddress;
+        encodedPlace[@"formatted_address"] = place.formattedAddress;
     }
     if (place.rating != 0.0) {
         encodedPlace[@"rating"] = @(place.rating);
     }
     switch (place.openNowStatus) {
         case kGMSPlacesOpenNowStatusYes:
-            encodedPlace[@"openNowStatus"] = @"yes";
+            encodedPlace[@"open_now_status"] = @(true);
             break;
         case kGMSPlacesOpenNowStatusNo:
-            encodedPlace[@"openNowStatus"] = @"no";
+            encodedPlace[@"open_now_status"] = @(false);
             break;
         case kGMSPlacesOpenNowStatusUnknown:
             break;
     }
     switch (place.priceLevel) {
         case kGMSPlacesPriceLevelFree:
-            encodedPlace[@"priceLevel"] = @"free";
+            encodedPlace[@"price_level"] = @"free";
             break;
         case kGMSPlacesPriceLevelCheap:
-            encodedPlace[@"priceLevel"] = @"cheap";
+            encodedPlace[@"price_level"] = @"cheap";
             break;
         case kGMSPlacesPriceLevelMedium:
-            encodedPlace[@"priceLevel"] = @"medium";
+            encodedPlace[@"price_level"] = @"medium";
             break;
         case kGMSPlacesPriceLevelHigh:
-            encodedPlace[@"priceLevel"] = @"high";
+            encodedPlace[@"price_level"] = @"high";
             break;
         case kGMSPlacesPriceLevelExpensive:
-            encodedPlace[@"priceLevel"] = @"expensive";
+            encodedPlace[@"price_level"] = @"expensive";
             break;
         case kGMSPlacesPriceLevelUnknown:
             break;
@@ -454,7 +454,7 @@ NSDictionary* encodePlace(GMSPlace* place) {
         encodedPlace[@"viewport"] = encodeBounds(place.viewport);
     }
     if (place.addressComponents) {
-        encodedPlace[@"addressComponents"] = encodeAddressComponents(place.addressComponents);
+        encodedPlace[@"address_components"] = encodeAddressComponents(place.addressComponents);
     }
 
     return encodedPlace;
@@ -462,8 +462,8 @@ NSDictionary* encodePlace(GMSPlace* place) {
 
 NSDictionary* encodeBounds(GMSCoordinateBounds* bounds) {
     return @{
-             @"northEast": encodeCoordinate(bounds.northEast),
-             @"southWest": encodeCoordinate(bounds.southWest),
+             @"north_east": encodeCoordinate(bounds.northEast),
+             @"south_west": encodeCoordinate(bounds.southWest),
              };
 }
 
@@ -489,7 +489,6 @@ NSDictionary* encodeAddressComponent(GMSAddressComponent* component) {
              @"type": component.type,
              };
 }
-
 
 @end
 
