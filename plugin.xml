@@ -34,7 +34,7 @@
         <source-file src="src/ios/CDVGooglePlaces.m"/>
 
         <!-- Install GooglePlaces as a pod -->
-        <framework src="GooglePlaces" type="podspec" spec="~2.3.0" />
+        <framework src="GooglePlaces" type="podspec" spec="2.3.0" />
         <framework src="GooglePlacePicker" type="podspec" spec="2.3.0" />
     </platform>
 
