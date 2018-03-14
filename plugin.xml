@@ -29,7 +29,7 @@
 
         <!-- add dependencies to Gradle -->
         <framework src="com.google.android.gms:play-services-maps:+" />
-        <framework src="com.google.android.gms:play-services-location:+" />
+        <framework src="com.google.android.gms:play-services:+" />
 
         <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
@@ -41,7 +41,7 @@
         </config-file>
         <source-file src="src/android/CordovaGooglePlaces.java" target-dir="src/plugin/google/places" />
     </platform>
-    
+
     <!-- iOS support -->
     <platform name="ios">
         <!-- Add API_KEY_FOR_IOS preference, copied to Info.plist -->
