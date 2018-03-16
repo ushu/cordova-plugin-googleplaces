@@ -15,6 +15,33 @@
         <clobbers target="cordova.plugins.GooglePlaces" />
     </js-module>
 
+    <!-- Android support -->
+    <platform name="android">
+        <!-- Add API_KEY_FOR_ANDROID preference, copied to AndroidManifest.xml -->
+        <preference name="API_KEY_FOR_ANDROID" />
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+          <meta-data android:name="com.google.android.geo.API_KEY" android:value="$API_KEY_FOR_ANDROID" />
+        </config-file>
+        <!-- Google play is needed too -->
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+          <meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+        </config-file>
+
+        <!-- add dependencies to Gradle -->
+        <framework src="com.google.android.gms:play-services-maps:+" />
+        <framework src="com.google.android.gms:play-services:+" />
+
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+        <config-file target="res/xml/config.xml" parent="/*">
+          <feature name="GooglePlaces">
+            <param name="android-package" value="plugin.google.places.CordovaGooglePlaces" />
+            <param name="onload" value="true" />
+          </feature>
+        </config-file>
+        <source-file src="src/android/CordovaGooglePlaces.java" target-dir="src/plugin/google/places" />
+    </platform>
+
     <!-- iOS support -->
     <platform name="ios">
         <!-- Add API_KEY_FOR_IOS preference, copied to Info.plist -->
