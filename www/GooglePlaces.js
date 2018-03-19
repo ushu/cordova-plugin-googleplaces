@@ -111,7 +111,7 @@ class GooglePlaces {
     let failure = () => {};
     if (callbacks.length > 0) {
       success = callbacks[0];
-      if (callbacks.length > 0) {
+      if (callbacks.length > 1) {
         failure = err => callbacks[1](new Error(err));
       }
     }
@@ -184,7 +184,7 @@ class GooglePlaces {
     let failure = () => {};
     if (callbacks.length > 0) {
       success = callbacks[0];
-      if (callbacks.length > 0) {
+      if (callbacks.length > 1) {
         failure = err => callbacks[1](new Error(err));
       }
     }
