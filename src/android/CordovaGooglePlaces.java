@@ -329,31 +329,37 @@ public class CordovaGooglePlaces extends CordovaPlugin implements GoogleApiClien
     }
 
     private LatLngBounds decodeCoordinateBounds(JSONObject obj) throws JSONException {
-        Object rawNorthEast = obj.get("northEast");
+        Object rawNorthEast = obj.get("northeast");
         if (!(rawNorthEast instanceof JSONObject)) {
-            throw new JSONException("\"northEast\" should be an object");
+            throw new JSONException("\"northeast\" should be an object");
         }
-        LatLng northEast = decodeCoordinate((JSONObject) rawNorthEast);
+        LatLng northeast = decodeCoordinate((JSONObject) rawNorthEast);
 
-        Object rawSouthWest = obj.get("southWest");
+        Object rawSouthWest = obj.get("southwest");
         if (!(rawSouthWest instanceof JSONObject)) {
-            throw new JSONException("\"southWest\" should be an object");
+            throw new JSONException("\"southwest\" should be an object");
         }
-        LatLng southWest = decodeCoordinate((JSONObject) rawSouthWest);
+        LatLng southwest = decodeCoordinate((JSONObject) rawSouthWest);
 
-        return new LatLngBounds(northEast, southWest);
+        return new LatLngBounds(northeast, southwest);
     }
 
     private LatLng decodeCoordinate(JSONObject obj) throws JSONException {
-        Object rawLatitude = obj.get("latitude");
+        Object rawLatitude = obj.get("lat");
+        if (rawLatitude == null) {
+          rawLatitude = obj.get("latitude"); // for compatibility w/ older versions
+        }
         if (!(rawLatitude instanceof Double)) {
-            throw new JSONException("\"latitude\" should be a number");
+            throw new JSONException("\"lat\" should be a number");
         }
         double latitude = (Double)rawLatitude;
 
-        Object rawLongitude = obj.get("longitude");
+        Object rawLongitude = obj.get("lng");
+        if (rawLongitude == null) {
+          rawLongitude = obj.get("longitude"); // for compatibility w/ older versions
+        }
         if (!(rawLongitude instanceof Double)) {
-            throw new JSONException("\"longitude\" should be a number");
+            throw new JSONException("\"lng\" should be a number");
         }
         double longitude = (Double)rawLongitude;
 
@@ -362,10 +368,10 @@ public class CordovaGooglePlaces extends CordovaPlugin implements GoogleApiClien
 
     private  JSONObject encodeAutocompletePrediction(AutocompletePrediction prediciton) throws JSONException {
         JSONObject result = new JSONObject();
-        result.put("fullText", prediciton.getFullText(null).toString());
-        result.put("primaryText", prediciton.getPrimaryText(null).toString());
-        result.put("secondaryText", prediciton.getSecondaryText(null).toString());
-        result.put("placeID", prediciton.getPlaceId());
+        result.put("full_text", prediciton.getFullText(null).toString());
+        result.put("primary_text", prediciton.getPrimaryText(null).toString());
+        result.put("secondary_text", prediciton.getSecondaryText(null).toString());
+        result.put("place_id", prediciton.getPlaceId());
         result.put("types", encodePlaceTypes(prediciton.getPlaceTypes()));
         return result;
     }
@@ -380,13 +386,13 @@ public class CordovaGooglePlaces extends CordovaPlugin implements GoogleApiClien
     private JSONObject encodePlace(Place place) throws JSONException {
         JSONObject result = new JSONObject();
         result.put("name", place.getName());
-        result.put("placeID", place.getId());
+        result.put("place_id", place.getId());
 
         if (place.getPhoneNumber() != null) {
-            result.put("phoneNumber", place.getPhoneNumber());
+            result.put("phone_number", place.getPhoneNumber());
         }
         if (place.getAddress() != null) {
-            result.put("formattedAddress", place.getAddress());
+            result.put("formatted_address", place.getAddress());
         }
         if (place.getRating() != 0.0) {
             result.put("rating", place.getRating());
@@ -398,30 +404,34 @@ public class CordovaGooglePlaces extends CordovaPlugin implements GoogleApiClien
         if (place.getPriceLevel() >= 0) {
             switch (place.getPriceLevel()) {
                 case 0:
-                    result.put("priceLevel", "free");
+                    result.put("price_level", "free");
                     break;
                 case 1:
-                    result.put("priceLevel", "cheap");
+                    result.put("price_level", "cheap");
                     break;
                 case 2:
-                    result.put("priceLevel", "medium");
+                    result.put("price_level", "medium");
                     break;
                 case 3:
-                    result.put("priceLevel", "high");
+                    result.put("price_level", "high");
                     break;
                 case 4:
-                    result.put("priceLevel", "expensive");
+                    result.put("price_level", "expensive");
                     break;
             }
         }
-        if (place.getLatLng() != null) {
-            result.put("coordinate", encodeCoordinate(place.getLatLng()));
+        if (place.getLatLng() != null || place.getViewport() != null) {
+          JSONObject geometry = new JSONObject();
+          if (place.getLatLng() != null) {
+              geometry.put("location", encodeCoordinate(place.getLatLng()));
+          }
+          if (place.getViewport() != null) {
+              geometry.put("viewport", encodeCoordinateBounds(place.getViewport()));
+          }
+          result.put("geometry", geometry);
         }
         if (place.getWebsiteUri() != null) {
             result.put("website", place.getWebsiteUri().toString());
-        }
-        if (place.getViewport() != null) {
-            result.put("viewport", encodeCoordinateBounds(place.getViewport()));
         }
         if (place.getAttributions() != null) {
             result.put("attributions", place.getAttributions());
@@ -432,8 +442,8 @@ public class CordovaGooglePlaces extends CordovaPlugin implements GoogleApiClien
 
     private JSONObject encodeCoordinateBounds(LatLngBounds bounds) throws JSONException {
         JSONObject result = new JSONObject();
-        result.put("northEast", encodeCoordinate(bounds.northeast));
-        result.put("southWest", encodeCoordinate(bounds.southwest));
+        result.put("northeast", encodeCoordinate(bounds.northeast));
+        result.put("southwest", encodeCoordinate(bounds.southwest));
         return result;
     }
 
@@ -442,8 +452,8 @@ public class CordovaGooglePlaces extends CordovaPlugin implements GoogleApiClien
             return null;
         }
         JSONObject result = new JSONObject();
-        result.put("latitude", latLng.latitude);
-        result.put("longitude", latLng.longitude);
+        result.put("lat", latLng.latitude);
+        result.put("lng", latLng.longitude);
         return result;
     }
 

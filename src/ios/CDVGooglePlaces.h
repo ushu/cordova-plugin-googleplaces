@@ -11,4 +11,3 @@
 -(void)showPlaceAutocomplete:(CDVInvokedUrlCommand*)command;
 
 @end
-

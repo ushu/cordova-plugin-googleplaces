@@ -9,11 +9,12 @@
 @end
 
 @implementation CDVGooglePlaces {
-    NSString* _APIKey;
-    CDVInvokedUrlCommand* _placePickerCommand;
-    CDVInvokedUrlCommand* _placeAutocompleteCommand;
+    NSString* _APIKey; // The API Key from Google, checked in pluginInitialize
+    CDVInvokedUrlCommand* _placePickerCommand; // store the Cordova command that opened Picker
+    CDVInvokedUrlCommand* _placeAutocompleteCommand; // store the Cordova command that Autocomplete
 }
 
+// Call on boot time, loads the API Key from the Info.plist
 -(void)pluginInitialize {
     static NSString* infoKey = @"Google Places API Key";
     _APIKey = [[[NSBundle mainBundle] infoDictionary] objectForKey:infoKey];
@@ -25,6 +26,13 @@
     }
 }
 
+/**
+ * Implementation for cordova.plugins.GooglePlaces.currentPlace().
+ *
+ * This method expect no argument form the `command`.
+ *
+ * On return it will return
+ */
 -(void)currentPlace:(CDVInvokedUrlCommand *) command {
     if (!_APIKey) {
         [self failCommandMissingAPIKey:command.callbackId];
@@ -284,16 +292,19 @@ GMSPlacesAutocompleteTypeFilter decodeAutocompleteTypeFilter(NSString* s, NSErro
 GMSCoordinateBounds* decodeCoordinateBounds(NSDictionary<NSString*,id>* dict, NSError** error) {
     NSError *decodeError;
     
-    id rawNorthEast = [dict objectForKey:@"north_east"];
+    id rawNorthEast = [dict objectForKey:@"northeast"];
+    if (!rawNorthEast) {
+        rawNorthEast = [dict objectForKey:@"north_east"]; // for compatibility w/ older versions
+    }
     if (!rawNorthEast) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"north_east\" coordinate for coordinate bounds" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"northeast\" coordinate for coordinate bounds" }];
         }
         return nil;
     }
     if (![rawNorthEast isKindOfClass:[NSDictionary class]]) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"north_east\" coordinate should be an Object" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"northeast\" coordinate should be an Object" }];
         }
         return nil;
     }
@@ -305,16 +316,19 @@ GMSCoordinateBounds* decodeCoordinateBounds(NSDictionary<NSString*,id>* dict, NS
         return nil;
     }
     
-    id rawSouthWest = [dict objectForKey:@"south_west"];
+    id rawSouthWest = [dict objectForKey:@"southwest"];
+    if (!rawSouthWest) {
+        rawSouthWest = [dict objectForKey:@"south_west"]; // for compatibility w/ older versions
+    }
     if (!rawSouthWest) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"south_west\" coordinate for coordinate bounds" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"southwest\" coordinate for coordinate bounds" }];
         }
         return nil;
     }
     if (![rawSouthWest isKindOfClass:[NSDictionary class]]) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"south_west\" coordinate should be an Object" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"southwest\" coordinate should be an Object" }];
         }
         return nil;
     }
@@ -330,31 +344,37 @@ GMSCoordinateBounds* decodeCoordinateBounds(NSDictionary<NSString*,id>* dict, NS
 }
 
 CLLocationCoordinate2D decodeCoordinate(NSDictionary<NSString*,id>* dict, NSError **error) {
-    id rawLatitude = [dict objectForKey:@"latitude"];
+    id rawLatitude = [dict objectForKey:@"lat"];
+    if (!rawLatitude) {
+        rawLatitude = [dict objectForKey:@"latitude"]; // for compatibility w/ older versions
+    }
     if (!rawLatitude) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"latitude\" value for coordinate" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"lat\" value for coordinate" }];
         }
         return kCLLocationCoordinate2DInvalid;
     }
     if (![rawLatitude isKindOfClass:[NSNumber class]]) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"latitude\" value should be a number" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"lat\" value should be a number" }];
         }
         return kCLLocationCoordinate2DInvalid;
     }
     CLLocationDegrees latitude = [((NSNumber*)rawLatitude) doubleValue];
     
-    id rawLongitude = [dict objectForKey:@"longitude"];
+    id rawLongitude = [dict objectForKey:@"lng"];
+    if (!rawLongitude) {
+        rawLongitude = [dict objectForKey:@"longitude"]; // for compatibility w/ older versions
+    }
     if (!rawLongitude) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"longitude\" value for coordinate" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"missing \"lng\" value for coordinate" }];
         }
         return kCLLocationCoordinate2DInvalid;
     }
     if (![rawLongitude isKindOfClass:[NSNumber class]]) {
         if (error) {
-            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"longitude\" value should be a number" }];
+            *error = [NSError errorWithDomain:@"cordova-plugin-googleplaces" code:0 userInfo:@{ NSLocalizedDescriptionKey: @"\"lng\" value should be a number" }];
         }
         return kCLLocationCoordinate2DInvalid;
     }
@@ -367,12 +387,27 @@ CLLocationCoordinate2D decodeCoordinate(NSDictionary<NSString*,id>* dict, NSErro
 
 NSDictionary* encodeAutocompletePrediction(GMSAutocompletePrediction* prediction) {
     return @{
-             @"full_text": [prediction.attributedFullText string],
+             @"description": [prediction.attributedFullText string],
+             @"matched_substrings": extractMatchedSubstrings(prediction.attributedFullText),
              @"primary_text": [prediction.attributedPrimaryText string],
              @"secondary_text": [prediction.attributedSecondaryText string],
              @"place_id": prediction.placeID,
              @"types": prediction.types,
              };
+}
+
+NSArray* extractMatchedSubstrings(NSAttributedString* input) {
+    NSMutableArray* matchedSubstrings = [[NSMutableArray alloc] init];
+    [input enumerateAttribute:kGMSAutocompleteMatchAttribute
+                      inRange:NSMakeRange(0, input.length)
+                      options:0
+                   usingBlock:^(id  _Nullable value, NSRange range, BOOL * _Nonnull stop) {
+                       [matchedSubstrings addObject:@{
+                                                      @"offset": @(range.location),
+                                                      @"length": @(range.location),
+                                                      }];
+    }];
+    return matchedSubstrings;
 }
 
 NSDictionary* encodePlaceLikelihoodList(GMSPlaceLikelihoodList* list) {
@@ -402,12 +437,19 @@ NSDictionary* encodePlace(GMSPlace* place) {
                                                               @"name": place.name,
                                                               @"place_id": place.placeID
                                                               }];
-    
-    if (CLLocationCoordinate2DIsValid(place.coordinate)) {
-        encodedPlace[@"coordinate"] = encodeCoordinate(place.coordinate);
+    BOOL hasCoordinate = CLLocationCoordinate2DIsValid(place.coordinate);
+    if (hasCoordinate || place.viewport) {
+        NSMutableDictionary* geometry = [[NSMutableDictionary alloc] init];
+        if (hasCoordinate) {
+            geometry[@"location"] = encodeCoordinate(place.coordinate);
+        }
+        if (place.viewport) {
+            geometry[@"viewport"] = encodeBounds(place.viewport);
+        }
+        encodedPlace[@"geometry"] = [geometry copy];
     }
     if (place.phoneNumber) {
-        encodedPlace[@"phone_number"] = place.phoneNumber;
+        encodedPlace[@"international_phone_number"] = place.phoneNumber;
     }
     if (place.formattedAddress) {
         encodedPlace[@"formatted_address"] = place.formattedAddress;
@@ -453,9 +495,6 @@ NSDictionary* encodePlace(GMSPlace* place) {
     if (place.attributions) {
         encodedPlace[@"attributions"] = [place.attributions string];
     }
-    if (place.viewport) {
-        encodedPlace[@"viewport"] = encodeBounds(place.viewport);
-    }
     if (place.addressComponents) {
         encodedPlace[@"address_components"] = encodeAddressComponents(place.addressComponents);
     }
@@ -465,15 +504,15 @@ NSDictionary* encodePlace(GMSPlace* place) {
 
 NSDictionary* encodeBounds(GMSCoordinateBounds* bounds) {
     return @{
-             @"north_east": encodeCoordinate(bounds.northEast),
-             @"south_west": encodeCoordinate(bounds.southWest),
+             @"northeast": encodeCoordinate(bounds.northEast),
+             @"southwest": encodeCoordinate(bounds.southWest),
              };
 }
 
 NSDictionary* encodeCoordinate(CLLocationCoordinate2D coordinate) {
     return @{
-             @"latitude": @(coordinate.latitude),
-             @"longitude": @(coordinate.longitude),
+             @"lat": @(coordinate.latitude),
+             @"lng": @(coordinate.longitude),
              };
 }
 
@@ -488,12 +527,17 @@ NSArray<NSDictionary*>* encodeAddressComponents(NSArray<GMSAddressComponent*>* c
 
 NSDictionary* encodeAddressComponent(GMSAddressComponent* component) {
     return @{
-             @"name": component.name,
+             @"long_name": component.name,
+             @"short_name": component.name,
              @"type": component.type,
              };
 }
 
 @end
+
+////////////////////////////////////////////////////////////////////////////
+// Make CDVGooglePlaces conform to GMSPlacePickerViewControllerDelegate
+////////////////////////////////////////////////////////////////////////////
 
 @implementation CDVGooglePlaces(PlacePicker)
 
@@ -526,6 +570,10 @@ NSDictionary* encodeAddressComponent(GMSAddressComponent* component) {
 }
 
 @end
+
+////////////////////////////////////////////////////////////////////////////
+// Make CDVGooglePlaces conform to GMSAutocompleteViewControllerDelegate
+////////////////////////////////////////////////////////////////////////////
 
 @implementation CDVGooglePlaces(Autocomplete)
 
