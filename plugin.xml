@@ -29,7 +29,7 @@
 
         <!-- add dependencies to Gradle -->
         <framework src="com.google.android.gms:play-services-maps:+" />
-        <framework src="com.google.android.gms:play-services:+" />
+        <framework src="com.google.android.gms:play-services-places:+" />
 
         <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
