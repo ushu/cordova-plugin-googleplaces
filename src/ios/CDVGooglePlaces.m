@@ -15,10 +15,13 @@
 }
 
 -(void)pluginInitialize {
-    _APIKey = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"Google Places API Key"];
+    static NSString* infoKey = @"Google Places API Key";
+    _APIKey = [[[NSBundle mainBundle] infoDictionary] objectForKey:infoKey];
     
     if (_APIKey) {
         [GMSPlacesClient provideAPIKey:_APIKey];
+    } else {
+      NSLog(@"WARNING: Expecting the Info.plist file to contain a key named \"%@\"", infoKey);
     }
 }
 
@@ -554,7 +557,6 @@ NSDictionary* encodeAddressComponent(GMSAddressComponent* component) {
     [self.viewController dismissViewControllerAnimated:true completion:nil];
 
 }
-
 
 @end
 
